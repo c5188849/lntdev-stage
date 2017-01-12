@@ -1,0 +1,53 @@
+CREATE TABLE `bitmapdata` (
+	`StartingId` VARCHAR(255) NULL DEFAULT NULL,
+	`Bitmap` VARCHAR(50) NULL DEFAULT NULL,
+	`UpdateTime` DATETIME NOT NULL,
+	`CAKMac` VARCHAR(255) NOT NULL,
+	CONSTRAINT `bitmapdata_ibfk_1` FOREIGN KEY (`UpdateTime`, `CAKMac`) REFERENCES `wbclient` (`UpdateTime`, `CAKMac`)
+)
+COLLATE='latin1_swedish_ci'
+ENGINE=InnoDB
+;
+
+
+CREATE TABLE `ppvdata` (
+	`PPVEid` VARCHAR(50) NULL DEFAULT NULL,
+	`PPVStartTime` VARCHAR(50) NULL DEFAULT NULL,
+	`Duration` VARCHAR(50) NULL DEFAULT NULL,
+	`UpdateTime` DATETIME NOT NULL,
+	`CAKMac` VARCHAR(50) NOT NULL,
+	CONSTRAINT `ppvdata_ibfk_1` FOREIGN KEY (`UpdateTime`, `CAKMac`) REFERENCES `wbclient` (`UpdateTime`, `CAKMac`)
+)
+COLLATE='latin1_swedish_ci'
+ENGINE=InnoDB
+;
+
+
+
+
+CREATE TABLE wbclient (
+	DataVersion VARCHAR(20) NULL DEFAULT NULL,
+	`HardwareModel` VARCHAR(50) NULL DEFAULT NULL,
+	`HardwareRevision` VARCHAR(50) NULL DEFAULT NULL,
+	`ContactReason` VARCHAR(50) NULL DEFAULT NULL,
+	`ContactUptime` VARCHAR(50) NULL DEFAULT NULL,
+	`ContactHubid` VARCHAR(50) NULL DEFAULT NULL,
+	`SMMac` VARCHAR(50) NULL DEFAULT NULL,
+	`SMExpiration` VARCHAR(50) NULL DEFAULT NULL,
+	`CAKMac` VARCHAR(50) NOT NULL,
+	`CAKVersion` VARCHAR(50) NULL DEFAULT NULL,
+	UpdateTime DATETIME NOT NULL,
+	PRIMARY KEY (`UpdateTime`, `CAKMac`)
+)
+COLLATE='latin1_swedish_ci'
+ENGINE=InnoDB
+;
+
+select  wb.HardwareModel,wb.HardwareRevision,wb.ContactReason,wb.ContactUptime,wb.ContactHubid,wb.SMMac,wb.SMExpiration,wb.CAKMac,wb.CAKVersion,wb.UpdateTime,group_concat(pp.PPVEid,"###",pp.PPVStartTime,"###",pp.Duration) as ppv, group_concat(bm.StartingId,"###",bm.Bitmap) as bmd 
+from( (select * from wbclient) 
+wb LEFT  join (select * from bitmapdata) 
+bm on(wb.CAKMac = bm.CAKMac  and wb.UpdateTime = bm.UpdateTime)
+left join (select * from ppvdata)pp
+ on (wb.CAKMac = pp.CAKMac and wb.UpdateTime = pp.UpdateTime)
+
+) group by wb.CAKMac,wb.Updatetime
